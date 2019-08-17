@@ -34,10 +34,16 @@ class TopicsController extends Controller
      * 显示指定话题
      *
      * @param Topic $topic
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|\Illuminate\View\View
      */
-    public function show(Topic $topic)
+    public function show(Topic $topic, Request $request)
     {
+        //URL矫正
+        if (!empty($topic->slug) && $topic->slug != $request->slug) {
+            return redirect($topic->link(), 301);
+        }
+        
         return view('topics.show', compact('topic'));
     }
 
@@ -66,7 +72,7 @@ class TopicsController extends Controller
         $topic->user_id = Auth::id();
         $topic->save();
 
-        return redirect()->route('topics.show', $topic->id)->with('message', '成功创建话题');
+        return redirect()->to($topic->link())->with('message', '成功创建话题');
     }
 
     /**
@@ -80,7 +86,7 @@ class TopicsController extends Controller
     {
         $this->authorize('update', $topic);
         $categories = Category::all();
-        return view('topics.create_and_edit', compact('topic','categories'));
+        return view('topics.create_and_edit', compact('topic', 'categories'));
     }
 
     /**
@@ -96,7 +102,7 @@ class TopicsController extends Controller
         $this->authorize('update', $topic);
         $topic->update($request->all());
 
-        return redirect()->route('topics.show', $topic->id)->with('message', '成功更新话题');
+        return redirect()->to($topic->link())->with('message', '成功更新话题');
     }
 
     /**
